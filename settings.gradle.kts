@@ -16,26 +16,12 @@ pluginManagement {
 
 rootProject.name = "handlib"
 
-include("1_21")
-include("1_21:fabric")
-include("1_21:neoforge")
 
-include("1_21_11")
-include("1_21_11:fabric")
-include("1_21_11:neoforge")
 
-// include("26_1")
-// include("26_1:fabric")
-// include("26_1:neoforge")
+include("26_1")
+include("26_1:fabric")
+include("26_1:neoforge")
 
-project(":1_21").projectDir         = file("src/1_21")
-project(":1_21:fabric").projectDir  = file("src/1_21/fabric")
-project(":1_21:neoforge").projectDir = file("src/1_21/neoforge")
-
-project(":1_21_11").projectDir         = file("src/1_21_11")
-project(":1_21_11:fabric").projectDir  = file("src/1_21_11/fabric")
-project(":1_21_11:neoforge").projectDir = file("src/1_21_11/neoforge")
-
-// project(":26_1").projectDir         = file("src/26_1")
-// project(":26_1:fabric").projectDir  = file("src/26_1/fabric")
-// project(":26_1:neoforge").projectDir = file("src/26_1/neoforge")
+project(":26_1").projectDir         = file("src/26_1")
+project(":26_1:fabric").projectDir  = file("src/26_1/fabric")
+project(":26_1:neoforge").projectDir = file("src/26_1/neoforge")
