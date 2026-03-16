@@ -4,7 +4,6 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 
-@SuppressWarnings("null")
 public final class TextEventCompat {
 
     private TextEventCompat() {
