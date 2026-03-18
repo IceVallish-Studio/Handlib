@@ -20,6 +20,6 @@ side="BOTH"
 [[dependencies.handlib]]
 modId="minecraft"
 type="required"
-versionRange="[1.21.11,)"
+versionRange="[1.21.10,)"
 ordering="NONE"
 side="BOTH"

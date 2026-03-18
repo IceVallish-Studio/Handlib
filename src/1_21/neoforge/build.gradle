@@ -34,3 +34,18 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 21
 }
+
+// Keep IDE classpath healthy after clean by forcing patched Minecraft artifacts to be recreated.
+tasks.named('compileJava') {
+    dependsOn(tasks.named('createMinecraftArtifacts'))
+}
+
+tasks.named('build') {
+    dependsOn(tasks.named('createMinecraftArtifacts'))
+}
+
+tasks.register('prepareIdeClasspath') {
+    group = 'ide'
+    description = 'Regenerates NeoForge moddev artifacts required by IDE classpath.'
+    dependsOn(tasks.named('createMinecraftArtifacts'), tasks.named('compileJava'))
+}
