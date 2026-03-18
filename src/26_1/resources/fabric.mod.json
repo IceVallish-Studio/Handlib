@@ -17,6 +17,6 @@
 	"environment": "*",
 	"depends": {
 		"fabricloader": ">=0.17.0",
-		"minecraft": ">=26.1-*"
+		"minecraft": "~26.1-"
 	}
 }
