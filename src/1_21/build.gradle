@@ -14,7 +14,7 @@ def fabricJar = project(':1_21:fabric').layout.buildDirectory.file("libs/handlib
 def neoJar = project(':1_21:neoforge').layout.buildDirectory.file("libs/handlib-neoforge-1.21-${rootProject.mod_version}.jar")
 
 tasks.register('jar', Jar) {
-    dependsOn(':1_21:fabric:assemble', ':1_21:neoforge:assemble')
+    dependsOn(':1_21:fabric:remapJar', ':1_21:neoforge:jar')
     archiveBaseName = base.archivesName.get()
     archiveVersion = project.version.toString()
     destinationDirectory = layout.buildDirectory.dir('libs').get().asFile

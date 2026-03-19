@@ -35,6 +35,15 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 21
 }
 
+tasks.named('processResources', ProcessResources) {
+    def modVersion = "${rootProject.mod_version}-1.21.11"
+    inputs.property('version', modVersion)
+
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(version: modVersion)
+    }
+}
+
 // Keep IDE classpath healthy after clean by forcing patched Minecraft artifacts to be recreated.
 tasks.named('compileJava') {
     dependsOn(tasks.named('createMinecraftArtifacts'))

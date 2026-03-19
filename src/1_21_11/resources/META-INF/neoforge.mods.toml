@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/suskese/hand-shaker/issues"
 
 [[mods]]
 modId="handlib"
-version="0.1.0"
+version="${version}"
 displayName="Hand Shaker Library"
 description="Shared compatibility library for Hand Shaker mods across loaders and versions"
 authors="IceVallish / Suskese"

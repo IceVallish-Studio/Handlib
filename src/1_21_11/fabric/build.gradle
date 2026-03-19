@@ -52,3 +52,27 @@ java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
+
+tasks.named('processResources', ProcessResources) {
+    def modVersion = "${rootProject.mod_version}-1.21.11"
+    inputs.property('version', modVersion)
+
+    filesMatching('fabric.mod.json') {
+        expand(version: modVersion)
+    }
+}
+
+tasks.register('namedJar', Jar) {
+    group = 'build'
+    description = 'Builds a non-remapped jar for mapped compile classpaths.'
+    from(sourceSets.main.output)
+    archiveBaseName = base.archivesName.get()
+    archiveVersion = project.version.toString()
+    archiveClassifier = 'named'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+}
+
+tasks.named('remapJar') {
+    // Keep remapped intermediary output as the default runtime artifact.
+    archiveClassifier = ''
+}

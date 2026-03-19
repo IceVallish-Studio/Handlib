@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "handlib",
-	"version": "0.1.0",
+	"version": "${version}",
 	"name": "Hand Shaker Library",
 	"description": "Shared compatibility library for Hand Shaker mods across loaders and versions",
 	"authors": [
@@ -17,6 +17,6 @@
 	"environment": "*",
 	"depends": {
 		"fabricloader": ">=0.17.0",
-		"minecraft": ">=1.21.10"
+		"minecraft": ">=1.21.11"
 	}
 }
