@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "handlib",
-	"version": "0.1.0",
+	"version": "${version}",
 	"name": "Hand Shaker Library",
 	"description": "Shared compatibility library for Hand Shaker mods across loaders and versions",
 	"authors": [

@@ -48,3 +48,12 @@ java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
 }
+
+tasks.named('processResources', ProcessResources) {
+    def modVersion = "${rootProject.mod_version}-26.1"
+    inputs.property('version', modVersion)
+
+    filesMatching('fabric.mod.json') {
+        expand(version: modVersion)
+    }
+}
