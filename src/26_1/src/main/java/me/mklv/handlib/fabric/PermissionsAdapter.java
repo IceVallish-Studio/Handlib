@@ -2,6 +2,8 @@ package me.mklv.handlib.fabric;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 import java.lang.reflect.Method;
 
 public class PermissionsAdapter {
@@ -97,121 +99,11 @@ public class PermissionsAdapter {
     }
 
     private static boolean fallbackHasPermission(CommandSourceStack source, int minimumLevel) {
-        try {
-            Method hasPermission = source.getClass().getMethod("hasPermission", int.class);
-            Object result = hasPermission.invoke(source, minimumLevel);
-            if (result instanceof Boolean allowed) {
-                return allowed;
-            }
-        } catch (Exception ignored) {
-        }
-
-        try {
-            Method getPermissionLevel = source.getClass().getMethod("getPermissionLevel");
-            Object result = getPermissionLevel.invoke(source);
-            if (result instanceof Number level) {
-                return level.intValue() >= minimumLevel;
-            }
-        } catch (Exception ignored) {
-        }
-
-        try {
-            Object entity = source.getEntity();
-            if (entity instanceof ServerPlayer player) {
-                return fallbackHasPermission(player, minimumLevel);
-            }
-        } catch (Exception ignored) {
-        }
-
-        return resolveServer(source) != null;
+        return source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(minimumLevel)));
     }
 
     private static boolean fallbackHasPermission(ServerPlayer player, int minimumLevel) {
-        try {
-            Method hasPermission = player.getClass().getMethod("hasPermission", int.class);
-            Object result = hasPermission.invoke(player, minimumLevel);
-            if (result instanceof Boolean allowed) {
-                return allowed;
-            }
-        } catch (Exception ignored) {
-        }
-
-        try {
-            Method hasPermissions = player.getClass().getMethod("hasPermissions", int.class);
-            Object result = hasPermissions.invoke(player, minimumLevel);
-            if (result instanceof Boolean allowed) {
-                return allowed;
-            }
-        } catch (Exception ignored) {
-        }
-
-        try {
-            Object server = resolveServer(player);
-            if (server == null) {
-                return false;
-            }
-
-            Object playerList = server.getClass().getMethod("getPlayerList").invoke(server);
-            Object identity = resolveIdentity(player);
-            if (playerList == null || identity == null) {
-                return false;
-            }
-
-            Method getProfilePermissions = playerList.getClass().getMethod("getProfilePermissions", identity.getClass());
-            Object permissions = getProfilePermissions.invoke(playerList, identity);
-            if (permissions instanceof Number level) {
-                return level.intValue() >= minimumLevel;
-            }
-            if (permissions != null) {
-                Method getPermissionLevel = permissions.getClass().getMethod("getPermissionLevel");
-                Object level = getPermissionLevel.invoke(permissions);
-                if (level instanceof Number number) {
-                    return number.intValue() >= minimumLevel;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
-        return false;
+        return player.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(minimumLevel)));
     }
 
-    private static Object resolveServer(Object sourceOrPlayer) {
-        if (sourceOrPlayer == null) {
-            return null;
-        }
-
-        String[] methods = {"getServer", "server"};
-        for (String methodName : methods) {
-            try {
-                Method method = sourceOrPlayer.getClass().getMethod(methodName);
-                Object result = method.invoke(sourceOrPlayer);
-                if (result != null) {
-                    return result;
-                }
-            } catch (Exception ignored) {
-            }
-        }
-
-        try {
-            return sourceOrPlayer.getClass().getField("server").get(sourceOrPlayer);
-        } catch (Exception ignored) {
-        }
-
-        return null;
-    }
-
-    private static Object resolveIdentity(ServerPlayer player) {
-        String[] methods = {"nameAndId", "getNameAndId", "gameProfile", "getGameProfile"};
-        for (String methodName : methods) {
-            try {
-                Method method = player.getClass().getMethod(methodName);
-                Object result = method.invoke(player);
-                if (result != null) {
-                    return result;
-                }
-            } catch (Exception ignored) {
-            }
-        }
-        return null;
-    }
 }
