@@ -1,4 +1,4 @@
-package me.mklv.handlib.network;
+package me.mklv.handlib.common.network;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;

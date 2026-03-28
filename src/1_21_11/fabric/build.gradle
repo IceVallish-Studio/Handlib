@@ -32,16 +32,30 @@ dependencies {
     compileOnly 'me.lucko:fabric-permissions-api:0.6.1'
 }
 
+def generatedCommonDir = layout.buildDirectory.dir('generated/common/java')
+
+tasks.register('generateCommonSources', Copy) {
+    from '../common/src/main/java'
+    into generatedCommonDir
+    filter { String line ->
+        line.replace('me.mklv.handlib.common', 'me.mklv.handlib.fabric')
+    }
+}
+
 sourceSets {
     main {
         java {
-            srcDir '../src/main/java'
             srcDir 'src/main/java'
+            srcDir generatedCommonDir
         }
         resources {
             srcDir '../resources'
         }
     }
+}
+
+tasks.named('compileJava') {
+    dependsOn('generateCommonSources')
 }
 
 tasks.withType(JavaCompile).configureEach {

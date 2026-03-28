@@ -24,8 +24,6 @@ tasks.register('jar', Jar) {
         include 'fabric.mod.json'
         include 'assets/**'
         include 'me/mklv/handlib/fabric/**'
-        include 'me/mklv/handlib/network/**'
-        include 'me/mklv/handlib/text/**'
     }
     from({ zipTree(neoJar.get().asFile) }) {
         include 'META-INF/neoforge.mods.toml'

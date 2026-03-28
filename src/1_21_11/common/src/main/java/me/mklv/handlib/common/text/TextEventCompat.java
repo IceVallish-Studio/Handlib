@@ -1,4 +1,4 @@
-package me.mklv.handlib.text;
+package me.mklv.handlib.common.text;
 
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;

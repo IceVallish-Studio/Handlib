@@ -18,11 +18,21 @@ neoForge {
     }
 }
 
+def generatedCommonDir = layout.buildDirectory.dir('generated/common/java')
+
+tasks.register('generateCommonSources', Copy) {
+    from '../common/src/main/java'
+    into generatedCommonDir
+    filter { String line ->
+        line.replace('me.mklv.handlib.common', 'me.mklv.handlib.neoforge')
+    }
+}
+
 sourceSets {
     main {
         java {
-            srcDir '../src/main/java'
             srcDir 'src/main/java'
+            srcDir generatedCommonDir
         }
         resources {
             srcDir '../resources'
@@ -46,7 +56,7 @@ tasks.named('processResources', ProcessResources) {
 
 // Keep IDE classpath healthy after clean by forcing patched Minecraft artifacts to be recreated.
 tasks.named('compileJava') {
-    dependsOn(tasks.named('createMinecraftArtifacts'))
+    dependsOn(tasks.named('createMinecraftArtifacts'), 'generateCommonSources')
 }
 
 tasks.named('build') {

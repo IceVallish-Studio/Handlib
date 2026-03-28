@@ -1,4 +1,4 @@
-package me.mklv.handlib.fabric;
+package me.mklv.handlib.fabric.network;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
