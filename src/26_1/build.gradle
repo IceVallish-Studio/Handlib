@@ -1,6 +1,10 @@
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
+
 plugins {
     id 'base'
     id 'maven-publish'
+    id 'com.modrinth.minotaur'
+    id 'net.darkhax.curseforgegradle'
 }
 
 version = rootProject.mod_version
@@ -79,4 +83,47 @@ publishing {
             }
         }
     }
+}
+
+// ── Platform publishing (Modrinth & CurseForge) ───────────────────────────────
+
+def modrinthToken     = (dotEnv['modrinth.token']     ?: System.getenv('MODRINTH_TOKEN'))?.toString()
+def modrinthProjectId = (rootProject.findProperty('modrinth.projectId') ?: System.getenv('MODRINTH_PROJECT_ID'))?.toString()
+def curseforgeToken   = (dotEnv['curseforge.token']   ?: System.getenv('CURSEFORGE_TOKEN'))?.toString()
+def curseforgeProjectId = (rootProject.findProperty('curseforge.projectId') ?: System.getenv('CURSEFORGE_PROJECT_ID'))?.toString()
+
+def jarProvider = tasks.named('jar', Jar)
+
+modrinth {
+    token         = modrinthToken ?: ''
+    projectId     = modrinthProjectId ?: ''
+    versionNumber = "${project.version}+mc${rootProject.mc_version}"
+    versionType   = 'release'
+    uploadFile    = jarProvider
+    gameVersions  = [(String) rootProject.mc_version]
+    loaders       = ['fabric', 'neoforge']
+    detectLoaders = false
+}
+
+tasks.named('modrinth').configure {
+    dependsOn(jarProvider)
+}
+
+tasks.register('publishCurseForge', TaskPublishCurseForge) {
+    dependsOn(jarProvider)
+    apiToken = curseforgeToken ?: ''
+
+    def mainFile = upload(curseforgeProjectId ?: '0', jarProvider)
+    mainFile.releaseType = 'release'
+    mainFile.addGameVersion((String) rootProject.mc_version)
+    mainFile.addEnvironment("client", "server")
+    mainFile.addModLoader('Fabric', 'NeoForge')
+    mainFile.changelogType = 'text'
+    mainFile.changelog     = ''
+}
+
+tasks.register('publishPlatforms') {
+    group       = 'publishing'
+    description = 'Publishes the mod jar to Modrinth and CurseForge.'
+    dependsOn('modrinth', 'publishCurseForge')
 }
