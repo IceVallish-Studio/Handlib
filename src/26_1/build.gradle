@@ -1,5 +1,3 @@
-import net.darkhax.curseforgegradle.TaskPublishCurseForge
-
 plugins {
     id 'base'
     id 'maven-publish'
@@ -109,7 +107,9 @@ tasks.named('modrinth').configure {
     dependsOn(jarProvider)
 }
 
-tasks.register('publishCurseForge', TaskPublishCurseForge) {
+def curseforgeTaskType = plugins.getPlugin('net.darkhax.curseforgegradle').class.classLoader.loadClass('net.darkhax.curseforgegradle.TaskPublishCurseForge')
+
+tasks.register('publishCurseForge', curseforgeTaskType) {
     dependsOn(jarProvider)
     apiToken = curseforgeToken ?: ''
 
