@@ -9,14 +9,14 @@ version = rootProject.mod_version
 group = rootProject.maven_group
 
 base {
-    archivesName = "handlib-1.21.11"
+    archivesName = "handlib-26.1"
 }
 
-def fabricJar = project(':1_21_11:fabric').layout.buildDirectory.file("libs/handlib-fabric-1.21.11-${rootProject.mod_version}.jar")
-def neoJar = project(':1_21_11:neoforge').layout.buildDirectory.file("libs/handlib-neoforge-1.21.11-${rootProject.mod_version}.jar")
+def fabricJar = project(':26_1:fabric').layout.buildDirectory.file("libs/handlib-fabric-26.1-${rootProject.mod_version}.jar")
+def neoJar = project(':26_1:neoforge').layout.buildDirectory.file("libs/handlib-neoforge-26.1-${rootProject.mod_version}.jar")
 
 tasks.register('jar', Jar) {
-    dependsOn(':1_21_11:fabric:remapJar', ':1_21_11:neoforge:jar')
+    dependsOn(':26_1:fabric:assemble', ':26_1:neoforge:assemble')
     archiveBaseName = base.archivesName.get()
     archiveVersion = project.version.toString()
     destinationDirectory = layout.buildDirectory.dir('libs').get().asFile
@@ -26,6 +26,8 @@ tasks.register('jar', Jar) {
         include 'fabric.mod.json'
         include 'assets/**'
         include 'me/mklv/handlib/fabric/**'
+        include 'me/mklv/handlib/network/**'
+        include 'me/mklv/handlib/text/**'
     }
     from({ zipTree(neoJar.get().asFile) }) {
         include 'META-INF/neoforge.mods.toml'
@@ -87,17 +89,16 @@ def modrinthToken     = (dotEnv['modrinth.token']     ?: System.getenv('MODRINTH
 def modrinthProjectId = (rootProject.findProperty('modrinth.projectId') ?: System.getenv('MODRINTH_PROJECT_ID'))?.toString()
 def curseforgeToken   = (dotEnv['curseforge.token']   ?: System.getenv('CURSEFORGE_TOKEN'))?.toString()
 def curseforgeProjectId = (rootProject.findProperty('curseforge.projectId') ?: System.getenv('CURSEFORGE_PROJECT_ID'))?.toString()
-def supportedMcVersion = '1.21.11'
 
 def jarProvider = tasks.named('jar', Jar)
 
 modrinth {
     token         = modrinthToken ?: ''
     projectId     = modrinthProjectId ?: ''
-    versionNumber = "${project.version}+mc${supportedMcVersion}"
+    versionNumber = "${project.version}+mc${rootProject.mc_version}"
     versionType   = 'release'
     uploadFile    = jarProvider
-    gameVersions  = [supportedMcVersion]
+    gameVersions  = [(String) rootProject.mc_version]
     loaders       = ['fabric', 'neoforge']
     detectLoaders = false
 }
@@ -114,7 +115,7 @@ tasks.register('publishCurseForge', curseforgeTaskType) {
 
     def mainFile = upload(curseforgeProjectId ?: '0', jarProvider)
     mainFile.releaseType = 'release'
-    mainFile.addGameVersion(supportedMcVersion)
+    mainFile.addGameVersion((String) rootProject.mc_version)
     mainFile.addEnvironment("client", "server")
     mainFile.addModLoader('Fabric', 'NeoForge')
     mainFile.changelogType = 'text'

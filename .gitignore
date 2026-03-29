@@ -28,6 +28,10 @@ bin/
 
 *.DS_Store
 
+# local secrets
+
+.env
+
 # fabric
 
 run/

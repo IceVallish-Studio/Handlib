@@ -1,6 +1,8 @@
 plugins {
     id 'base'
     id 'maven-publish'
+    id 'com.modrinth.minotaur'
+    id 'net.darkhax.curseforgegradle'
 }
 
 version = rootProject.mod_version
@@ -77,4 +79,54 @@ publishing {
             }
         }
     }
+}
+
+// ── Platform publishing (Modrinth & CurseForge) ───────────────────────────────
+
+def modrinthToken       = (dotEnv['modrinth.token'] ?: System.getenv('MODRINTH_TOKEN'))?.toString()
+def modrinthProjectId   = (rootProject.findProperty('modrinth.projectId') ?: System.getenv('MODRINTH_PROJECT_ID'))?.toString()
+def curseforgeToken     = (dotEnv['curseforge.token'] ?: System.getenv('CURSEFORGE_TOKEN'))?.toString()
+def curseforgeProjectId = (rootProject.findProperty('curseforge.projectId') ?: System.getenv('CURSEFORGE_PROJECT_ID'))?.toString()
+
+def supportedMcVersions = [
+    '1.21', '1.21.1', '1.21.2', '1.21.3', '1.21.4',
+    '1.21.5', '1.21.6', '1.21.7', '1.21.8', '1.21.9', '1.21.10'
+]
+
+def jarProvider = tasks.named('jar', Jar)
+
+modrinth {
+    token         = modrinthToken ?: ''
+    projectId     = modrinthProjectId ?: ''
+    versionNumber = "${project.version}+mc1.21-1.21.10"
+    versionType   = 'release'
+    uploadFile    = jarProvider
+    gameVersions  = supportedMcVersions
+    loaders       = ['fabric', 'neoforge']
+    detectLoaders = false
+}
+
+tasks.named('modrinth').configure {
+    dependsOn(jarProvider)
+}
+
+def curseforgeTaskType = plugins.getPlugin('net.darkhax.curseforgegradle').class.classLoader.loadClass('net.darkhax.curseforgegradle.TaskPublishCurseForge')
+
+tasks.register('publishCurseForge', curseforgeTaskType) {
+    dependsOn(jarProvider)
+    apiToken = curseforgeToken ?: ''
+
+    def mainFile = upload(curseforgeProjectId ?: '0', jarProvider)
+    mainFile.releaseType = 'release'
+    supportedMcVersions.each { mc -> mainFile.addGameVersion(mc) }
+    mainFile.addEnvironment("client", "server")
+    mainFile.addModLoader('Fabric', 'NeoForge')
+    mainFile.changelogType = 'text'
+    mainFile.changelog     = ''
+}
+
+tasks.register('publishPlatforms') {
+    group       = 'publishing'
+    description = 'Publishes the mod jar to Modrinth and CurseForge.'
+    dependsOn('modrinth', 'publishCurseForge')
 }
