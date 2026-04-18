@@ -1,10 +1,7 @@
-package me.mklv.handlib.fabric;
+package me.mklv.handlib.common;
 
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permission;
-import net.minecraft.server.permissions.PermissionLevel;
 import java.lang.reflect.Method;
 
 public class PermissionsAdapter {
@@ -18,14 +15,10 @@ public class PermissionsAdapter {
         try {
             // Try to load the fabric-permissions-api
             Class<?> permissionsClass = Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
-
-            checkMethod = findCheckMethod(permissionsClass, SharedSuggestionProvider.class, String.class, int.class);
-            if (checkMethod == null) {
-                checkMethod = findCheckMethod(permissionsClass, CommandSourceStack.class, String.class, int.class);
-            }
-            hasFabricPermissions = checkMethod != null;
-        } catch (ClassNotFoundException e) {
-            // fabric-permissions-api not available, will use defaults
+            checkMethod = permissionsClass.getMethod("check", CommandSourceStack.class, String.class, int.class);
+            hasFabricPermissions = true;
+        } catch (Exception e) {
+            // fabric-permissions-api not available
         }
 
         PERMISSIONS_CHECK = checkMethod;
@@ -34,46 +27,43 @@ public class PermissionsAdapter {
 
     public static boolean checkPermission(CommandSourceStack source, String permission, int minimumLevel) {
         if ("handshaker.bypass".equals(permission)) {
-            if (!HAS_FABRIC_PERMISSIONS || PERMISSIONS_CHECK == null) {
-                return false;
+            if (HAS_FABRIC_PERMISSIONS && PERMISSIONS_CHECK != null) {
+                try {
+                    return (boolean) PERMISSIONS_CHECK.invoke(null, source, permission, Integer.MAX_VALUE);
+                } catch (Exception e) {
+                    // fall through
+                }
             }
-
-            try {
-                return (boolean) PERMISSIONS_CHECK.invoke(null, source, permission, Integer.MAX_VALUE);
-            } catch (Exception e) {
-                return false;
-            }
+            return source.hasPermission(4);
         }
 
-        if (HAS_FABRIC_PERMISSIONS) {
+        if (HAS_FABRIC_PERMISSIONS && PERMISSIONS_CHECK != null) {
             try {
                 return (boolean) PERMISSIONS_CHECK.invoke(null, source, permission, minimumLevel);
             } catch (Exception e) {
-                return fallbackHasPermission(source, minimumLevel);
+                return source.hasPermission(minimumLevel);
             }
         }
 
-        return fallbackHasPermission(source, minimumLevel);
+        return source.hasPermission(minimumLevel);
     }
 
     public static boolean checkPermission(ServerPlayer player, String permission) {
         if ("handshaker.bypass".equals(permission)) {
-            if (!HAS_FABRIC_PERMISSIONS || PERMISSIONS_CHECK == null) {
-                return false;
-            }
-
-            try {
-                CommandSourceStack source = player.createCommandSourceStack();
-                if (source != null) {
-                    return (boolean) PERMISSIONS_CHECK.invoke(null, source, permission, Integer.MAX_VALUE);
+            if (HAS_FABRIC_PERMISSIONS && PERMISSIONS_CHECK != null) {
+                try {
+                    CommandSourceStack source = player.createCommandSourceStack();
+                    if (source != null) {
+                        return (boolean) PERMISSIONS_CHECK.invoke(null, source, permission, Integer.MAX_VALUE);
+                    }
+                } catch (Exception e) {
+                    // fall through
                 }
-                return false;
-            } catch (Exception e) {
-                return false;
             }
+            return fallbackHasPermission(player, 4);
         }
 
-        if (HAS_FABRIC_PERMISSIONS) {
+        if (HAS_FABRIC_PERMISSIONS && PERMISSIONS_CHECK != null) {
             try {
                 CommandSourceStack source = player.createCommandSourceStack();
                 if (source != null) {
@@ -84,55 +74,18 @@ public class PermissionsAdapter {
             }
         }
 
-        return false;
+        return fallbackHasPermission(player, 4);
     }
 
     public static boolean hasFabricPermissions() {
         return HAS_FABRIC_PERMISSIONS;
     }
 
-    private static Method findCheckMethod(Class<?> permissionsClass, Class<?> subjectType, Class<?>... trailingTypes) {
-        try {
-            Class<?>[] parameterTypes = new Class<?>[trailingTypes.length + 1];
-            parameterTypes[0] = subjectType;
-            System.arraycopy(trailingTypes, 0, parameterTypes, 1, trailingTypes.length);
-            return permissionsClass.getMethod("check", parameterTypes);
-        } catch (NoSuchMethodException e) {
-            return null;
-        }
-    }
-
-    private static boolean fallbackHasPermission(CommandSourceStack source, int minimumLevel) {
-        if (source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(minimumLevel)))) {
-            return true;
-        }
-
-        try {
-            Method getPermissionLevel = source.getClass().getMethod("getPermissionLevel");
-            Object result = getPermissionLevel.invoke(source);
-            if (result instanceof Number level) {
-                return level.intValue() >= minimumLevel;
-            }
-        } catch (Exception ignored) {
-        }
-
-        try {
-            // Only allow server-owned non-entity sources (console/RCON/command blocks) here.
-            if (source.getEntity() == null) {
-                return resolveServer(source) != null;
-            }
-        } catch (Exception ignored) {
-        }
-
-        return false;
-    }
-
     private static boolean fallbackHasPermission(ServerPlayer player, int minimumLevel) {
         try {
-            CommandSourceStack source = player.createCommandSourceStack();
-            if (source != null) {
-                return fallbackHasPermission(source, minimumLevel);
-            }
+            // Use reflection for hasPermissions to avoid potential binary compatibility issues with getServer()
+            Method hasPermissions = player.getClass().getMethod("hasPermissions", int.class);
+            return (boolean) hasPermissions.invoke(player, minimumLevel);
         } catch (Exception ignored) {
         }
 
@@ -154,10 +107,13 @@ public class PermissionsAdapter {
                 return level.intValue() >= minimumLevel;
             }
             if (permissions != null) {
-                Method getPermissionLevel = permissions.getClass().getMethod("getPermissionLevel");
-                Object level = getPermissionLevel.invoke(permissions);
-                if (level instanceof Number number) {
-                    return number.intValue() >= minimumLevel;
+                try {
+                    Method getPermissionLevel = permissions.getClass().getMethod("getPermissionLevel");
+                    Object level = getPermissionLevel.invoke(permissions);
+                    if (level instanceof Number number) {
+                        return number.intValue() >= minimumLevel;
+                    }
+                } catch (Exception ignored) {
                 }
             }
         } catch (Exception ignored) {

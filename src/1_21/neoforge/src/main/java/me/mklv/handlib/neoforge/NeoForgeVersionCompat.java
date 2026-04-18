@@ -8,6 +8,6 @@ public final class NeoForgeVersionCompat {
     }
 
     public static Predicate<CommandSourceStack> ownerPermission() {
-        return source -> source.hasPermission(4);
+        return source -> PermissionsAdapter.checkPermission(source, "handshaker.admin", 4);
     }
 }
