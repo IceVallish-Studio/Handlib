@@ -14,4 +14,11 @@ public final class PayloadTypeRegistry {
     ) {
         net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playC2S().register(type, codec);
     }
+
+    public static <T extends CustomPacketPayload> void registerClientboundPlay(
+            CustomPacketPayload.Type<T> type,
+            StreamCodec<? super RegistryFriendlyByteBuf, T> codec
+    ) {
+        net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(type, codec);
+    }
 }
